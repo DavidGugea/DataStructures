@@ -130,6 +130,75 @@ struct Node* insert(struct Node* node, int key) {
     return node;
 }
 
+struct Node* minValueNode(struct Node* node) {
+    struct Node* current = node;
+    
+    while (current->left != NULL)
+        current = current->left;
+
+    return current;
+}
+
+struct Node* deleteNode(struct Node* root, int key) {
+    if (root == NULL)
+        return root;
+
+    if (key < root->key)
+        root->left = deleteNode(root->left, key);
+    else if (key > root->key)
+        root->right = deleteNode(root->right, key);
+    else {
+        // Node with only one child
+        if ( root->left == NULL || root->right == NULL ) {
+            struct Node* temp = root->left ? root->left : root->right;
+
+            // No child case
+            if (temp == NULL) {
+                temp = root;
+                root = NULL;
+            } else {
+                *root = *temp;
+            }
+
+            free(temp);
+        } else {
+            struct Node* temp = minValueNode(root->right);
+            root->key = temp->key;
+            root->right = deleteNode(root->right, temp->key);
+        }
+    }
+
+    // In case that the tree only had one node
+    if (root == NULL)
+        return root;
+
+    root->height = 1 + max(height(root->left), height(root->right));
+
+    int balance = getBalance(root);
+
+    // LL CASE
+    if (balance > 1 && key < root->left->key)
+        return rightRotate(root);
+
+    // RR CASE
+    if (balance < -1 && key > root->right->key)
+        return leftRotate(root);
+
+    // LR CASE
+    if (balance > 1 && key > root->left->key) {
+        root->left = leftRotate(root->left);
+        return rightRotate(root);
+    }
+
+    // RL CASE
+    if (balance < -1 && key < root->right->key) {
+        root->right = rightRotate(root->right);
+        return leftRotate(root);
+    }
+
+    return root;
+}
+
 void preorder(struct Node* root) {
     if (root == NULL)
         return;
@@ -148,6 +217,10 @@ int main() {
     root = insert(root, 40);
     root = insert(root, 50);
     root = insert(root, 25);
+
+    preorder(root);
+    printf("\n");
+
 
     preorder(root);
     printf("\n");
